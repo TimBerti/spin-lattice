@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.preprocessing import scale
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
