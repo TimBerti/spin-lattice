@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
@@ -120,4 +121,4 @@ def update_lattice(field_type, alpha, beta):
     return fig
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=not os.environ.get('PRODUCTION'))
