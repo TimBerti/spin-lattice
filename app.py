@@ -2,66 +2,7 @@ import numpy as np
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
-
-
-def field(x, y, field_type):
-    if field_type == 'increasing curl':
-        return -.25*y, .25*x
-    if field_type == 'decreasing curl':
-        return -4*y / (x**2 + y**2), 4*x / (x**2 + y**2)
-    if field_type == 'curl':
-        return -y / np.sqrt(x**2 + y**2), x / np.sqrt(x**2 + y**2)
-    if field_type == 'increasing radial':
-        return .25*x, .25*y
-    if field_type == 'decreasing radial':
-        return 4*x / (x**2 + y**2), 4*y / (x**2 + y**2)
-    if field_type == 'radial':
-        return x / np.sqrt(x**2 + y**2), y / np.sqrt(x**2 + y**2)
-    if field_type == 'uniform':
-        return np.ones(x.shape), np.ones(x.shape)
-
-def angular_momentum(x_spin, y_spin, x_force, y_force):
-    return x_spin*y_force - y_spin*x_force
-
-def rotate(x, y, theta):
-    return np.cos(theta) * x + np.sin(theta) * y, -np.sin(theta) * x + np.cos(theta) * y
-
-def summed_neighbors(x_spin, y_spin):
-    n, m = x_spin.shape
-
-    x_tot = np.c_[x_spin[:, 1:], np.zeros((n, 1))] \
-        + np.c_[np.zeros((n, 1)), x_spin[:, :-1]] \
-        + np.r_[x_spin[1:, :], np.zeros((1, m))] \
-        + np.r_[np.zeros((1, m)), x_spin[:-1, :]] \
-
-    y_tot = np.c_[y_spin[:, 1:], np.zeros((n, 1))] \
-        + np.c_[np.zeros((n, 1)), y_spin[:, :-1]] \
-        + np.r_[y_spin[1:, :], np.zeros((1, m))] \
-        + np.r_[np.zeros((1, m)), y_spin[:-1, :]] \
-    
-    return x_tot, y_tot
-
-def next_spins(x_spin, y_spin, x_field, y_field, alpha, beta):
-    x_interaction, y_interaction = summed_neighbors(x_spin, y_spin)
-
-    field_momentum = angular_momentum(x_spin, y_spin, x_field, y_field)
-    interaction_momentum = angular_momentum(x_spin, y_spin, x_interaction, y_interaction)
-
-    total_angular_momentum = alpha * field_momentum + beta * interaction_momentum
-    
-    return rotate(x_spin, y_spin, total_angular_momentum)
-
-def recursive_frames(x, y, x_spin, y_spin, x_field, y_field, alpha, beta, n_frames, n_per_frame, frames):
-    if n_frames == 0:
-        return frames
-    n_frames -= 1
-
-    for _ in range(n_per_frame):
-        x_spin, y_spin = next_spins(x_spin, y_spin, x_field, y_field, alpha, beta)
-
-    frames.append(go.Frame(data=[ff.create_quiver(x, y, x_spin, y_spin, scale=.5).data[0]]))
-
-    return recursive_frames(x, y, x_spin, y_spin, x_field, y_field, alpha, beta, n_frames, n_per_frame, frames)
+from src.utils import field, recursive_frames
 
 
 app = Dash(__name__)
@@ -87,8 +28,20 @@ app.layout = html.Div([
             'width': '150px'
         }
     ),
-    dcc.Graph(id='field-graph',style={'width': '90vh', 'height': '90vh'}),
-    dcc.Graph(id='lattice-graph',style={'width': '90vh', 'height': '90vh'}),
+    dcc.Graph(
+        id='field-graph',
+        style={'width': '90vh', 'height': '90vh'}, 
+        config={
+            'displayModeBar': False
+        }
+    ),
+    dcc.Graph(
+        id='lattice-graph',
+        style={'width': '90vh', 'height': '90vh'}, 
+        config={
+            'displayModeBar': False
+        }
+    ),
     dcc.Slider(-1, 1, marks=None, value=.1, id='alpha', tooltip={"placement": "top", "always_visible": True}),
     dcc.Slider(-1, 1, marks=None, value=.1, id='beta', tooltip={"placement": "top", "always_visible": True})
 ])
@@ -104,7 +57,14 @@ x, y = np.meshgrid(np.linspace(-10, 10, m), np.linspace(-10, 10, n))
 @app.callback(Output('field-graph', 'figure'), Input('field-dropdown', 'value'))
 def display_field(field_type):
     x_field, y_field = field(x, y, field_type)
-    return ff.create_quiver(x, y, x_field, y_field, scale=.5)
+    fig = ff.create_quiver(x, y, x_field, y_field, scale=.5, marker=dict(color='black'))
+    fig.update_layout(
+            plot_bgcolor= 'rgba(0, 0, 0, 0)',
+            paper_bgcolor= 'rgba(0, 0, 0, 0)',
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False)
+        )
+    return fig
 
 
 @app.callback(Output('lattice-graph', 'figure'), [Input('field-dropdown', 'value'), Input('alpha', 'value'), Input('beta', 'value')])
@@ -119,9 +79,12 @@ def update_lattice(field_type, alpha, beta):
     frames = recursive_frames(x, y, x_spin, y_spin, x_field, y_field, .1*alpha, .1*beta, n_frames, n_per_frame, [])
 
     fig = go.Figure(
-        data=[ff.create_quiver(x, y, x_spin, y_spin, scale=.5).data[0]],
+        data=[ff.create_quiver(x, y, x_spin, y_spin, scale=.5, marker=dict(color='black')).data[0]],
         layout=go.Layout(
-            title="Start Title",
+            plot_bgcolor= 'rgba(0, 0, 0, 0)',
+            paper_bgcolor= 'rgba(0, 0, 0, 0)',
+            xaxis=dict(visible=False),
+            yaxis=dict(visible=False),
             updatemenus=[
                 dict(
                     type="buttons",
@@ -136,7 +99,20 @@ def update_lattice(field_type, alpha, beta):
                         )
                     ]
                 )
-            ]
+            ],
+            sliders = [
+                dict(
+                    transition= dict(duration= 0 ),
+                    x=0,#slider starting position  
+                    y=0, 
+                    currentvalue=dict(font=dict(size=12), 
+                                    prefix='Time: ', 
+                                    visible=True, 
+                                    xanchor= 'center'
+                                    ),  
+                    len=1.0 #slider length
+                )
+           ]
         ),
         frames=frames
     )
@@ -144,4 +120,4 @@ def update_lattice(field_type, alpha, beta):
     return fig
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
