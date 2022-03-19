@@ -3,49 +3,85 @@ import numpy as np
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
+import dash_bootstrap_components as dbc
 from src.utils import field, recursive_frames
 
 
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, '/assets/style.css'])
 
 server = app.server
 
 app.layout = html.Div([
-    html.H2('Spin lattice with force field'),
-    dcc.Dropdown(
-        id='field-dropdown',
-        options=[
-            {'label': 'uniform', 'value': 'uniform'},
-            {'label': 'increasing curl', 'value': 'increasing curl'},
-            {'label': 'decreasing curl', 'value': 'decreasing curl'},
-            {'label': 'curl', 'value': 'curl'},
-            {'label': 'increasing radial', 'value': 'increasing radial'},
-            {'label': 'decreasing radial', 'value': 'decreasing radial'},
-            {'label': 'radial', 'value': 'radial'}
-        ],
-        multi=False,
-        value='uniform',
-        style={
-            'width': '150px'
-        }
-    ),
-    dcc.Graph(
-        id='field-graph',
-        style={'width': '90vh', 'height': '90vh'}, 
-        config={
-            'displayModeBar': False
-        }
-    ),
-    dcc.Graph(
-        id='lattice-graph',
-        style={'width': '90vh', 'height': '90vh'}, 
-        config={
-            'displayModeBar': False
-        }
-    ),
-    dcc.Slider(-1, 1, marks=None, value=.1, id='alpha', tooltip={"placement": "top", "always_visible": True}),
-    dcc.Slider(-1, 1, marks=None, value=.1, id='beta', tooltip={"placement": "top", "always_visible": True})
-])
+    dbc.Row([
+        dbc.Col(
+            [
+                html.H2('Spin Lattice with Force Field'),
+                html.Br(),
+                html.H5('Force Field:'),
+                dcc.Dropdown(
+                    id='field-dropdown',
+                    options=[
+                        {'label': 'uniform', 'value': 'uniform'},
+                        {'label': 'increasing curl', 'value': 'increasing curl'},
+                        {'label': 'decreasing curl', 'value': 'decreasing curl'},
+                        {'label': 'curl', 'value': 'curl'},
+                        {'label': 'increasing radial', 'value': 'increasing radial'},
+                        {'label': 'decreasing radial', 'value': 'decreasing radial'},
+                        {'label': 'radial', 'value': 'radial'}
+                    ],
+                    multi=False,
+                    value='uniform',
+                    style={
+                        'color': 'black'
+                    }
+                ),
+                dcc.Graph(
+                    id='field-graph', 
+                    config={
+                        'displayModeBar': False
+                    },
+                    style={'width': '20vw', 'height': '20vw', 'padding-left': '15px'}
+                ),
+                html.H5('Force Field Strength:'),
+                dcc.Slider(-1, 1, marks=None, value=.1, id='alpha', tooltip={"placement": "top", "always_visible": True}),
+                html.H5('Spin Interaction Strength:'),
+                dcc.Slider(-1, 1, marks=None, value=.1, id='beta', tooltip={"placement": "top", "always_visible": True}),
+                
+            ],
+            width=3,
+            style={
+                'color': 'white',
+                'padding': '30px',
+                'background': '#004c6d',
+                'margin-right': '10px'
+            }
+        ),
+        dbc.Col(
+            [
+                dcc.Loading(
+                    id="loading",
+                    type="default",
+                    children=html.Div(id='loading-output'),
+                    style={
+                        'margin': 'auto'
+                    }
+                ),
+                dcc.Graph(
+                    id='lattice-graph',
+                    style={'width': 'min(100vh, 70vw)', 'height': 'min(100vh, 70vw)'}, 
+                    config={
+                        'displayModeBar': False
+                    }
+                )
+            ],
+            width=7
+        )
+    ])
+    ],
+    style={
+        'background': '#8aa1b4'
+    }
+)
 
 n_frames = 20
 n_per_frame = 100
@@ -63,12 +99,14 @@ def display_field(field_type):
             plot_bgcolor= 'rgba(0, 0, 0, 0)',
             paper_bgcolor= 'rgba(0, 0, 0, 0)',
             xaxis=dict(visible=False),
-            yaxis=dict(visible=False)
+            yaxis=dict(visible=False),
+            hovermode=False,
+            margin=dict(l=0, r=0, t=0, b=0)
         )
     return fig
 
 
-@app.callback(Output('lattice-graph', 'figure'), [Input('field-dropdown', 'value'), Input('alpha', 'value'), Input('beta', 'value')])
+@app.callback([Output('lattice-graph', 'figure'), Output("loading-output", "children")], [Input('field-dropdown', 'value'), Input('alpha', 'value'), Input('beta', 'value')])
 def update_lattice(field_type, alpha, beta):
     
     theta = np.random.rand(n, m) * 2 * np.pi
@@ -86,6 +124,7 @@ def update_lattice(field_type, alpha, beta):
             paper_bgcolor= 'rgba(0, 0, 0, 0)',
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
+            hovermode=False,
             updatemenus=[
                 dict(
                     type="buttons",
@@ -118,7 +157,7 @@ def update_lattice(field_type, alpha, beta):
         frames=frames
     )
 
-    return fig
+    return fig, None
 
 if __name__ == '__main__':
     app.run_server(debug=not os.environ.get('PRODUCTION'))
