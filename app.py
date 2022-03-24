@@ -40,9 +40,9 @@ app.layout = html.Div([
                     style={'width': '20vw', 'height': '20vw', 'padding-left': '15px'}
                 ),
                 html.H5('Force Field Strength:'),
-                dcc.Slider(-1, 1, marks=None, value=.1, id='field_coefficient', tooltip={"placement": "top", "always_visible": True}),
+                dcc.Slider(-1, 1, marks=None, value=.5, id='field_coefficient', tooltip={"placement": "top", "always_visible": True}),
                 html.H5('Spin Interaction Strength:'),
-                dcc.Slider(-1, 1, marks=None, value=.1, id='spin_coefficient', tooltip={"placement": "top", "always_visible": True}),
+                dcc.Slider(-1, 1, marks=None, value=.5, id='spin_coefficient', tooltip={"placement": "top", "always_visible": True}),
                 
             ],
             width=3,
@@ -86,8 +86,7 @@ def display_field(field_type):
     return create_field_graph(field_type)
 
 @app.callback([Output('lattice-graph', 'figure'), Output("loading-output", "children")], [Input('field-dropdown', 'value'), Input('field_coefficient', 'value'), Input('spin_coefficient', 'value')])
-def lattice_callback(field_type, field_coefficient, spin_coefficient):
-    
+def lattice_callback(field_type, field_coefficient, spin_coefficient): 
     return create_spin_lattice_animation(field_type, field_coefficient, spin_coefficient), None
 
 if __name__ == '__main__':

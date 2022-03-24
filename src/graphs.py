@@ -17,15 +17,12 @@ def create_field_graph(field_type):
     return fig
 
 
-def create_frames(field_type, field_coefficient=.1, spin_coefficient=.1, increment=.1, n_frames=30, n_per_frame=10):
+def create_frames(spin_lattice_with_field, increment=.1, n_frames=30, n_per_frame=10):
 
-    spin_lattice_with_field = SpinLatticeWithField(field_coefficient, spin_coefficient, field_args=dict(field_type=field_type))
+    
+    frames = []
 
-    def recursively_append_frames(increment, n_frames, n_per_frame, frames=[]):
-        if n_frames == 0:
-            return frames
-        n_frames -= 1
-
+    for _ in range(n_frames):
         frames.append(
             ff.create_quiver(
                 spin_lattice_with_field.grid.x, 
@@ -36,17 +33,17 @@ def create_frames(field_type, field_coefficient=.1, spin_coefficient=.1, increme
                 marker=dict(color='black')
             )
         )
-        
-        spin_lattice_with_field.incrementally_rotate_spins_according_to_force(increment, n_per_frame)
 
-        return recursively_append_frames(increment, n_frames, n_per_frame, frames)
+        spin_lattice_with_field.incrementally_rotate_spins_according_to_force(increment=increment, n_increments=n_per_frame)
 
-    return recursively_append_frames(increment, n_frames, n_per_frame)
+    return frames
 
 
 def create_spin_lattice_animation(field_type='uniform', field_coefficient=1, spin_coefficient=1):
 
-    frames = create_frames(field_type, field_coefficient, spin_coefficient)
+    spin_lattice_with_field = SpinLatticeWithField(field_coefficient, spin_coefficient, field_args=dict(field_type=field_type))
+
+    frames = create_frames(spin_lattice_with_field)
 
     fig = go.Figure(
         data=[frames[0].data[0]],
