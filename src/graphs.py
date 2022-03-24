@@ -50,6 +50,7 @@ def create_spin_lattice_animation(field_type='uniform', field_coefficient=1, spi
         layout=go.Layout(
             plot_bgcolor= 'rgba(0, 0, 0, 0)',
             paper_bgcolor= 'rgba(0, 0, 0, 0)',
+            margin=dict(l=0, r=0, t=0, b=0),
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             hovermode=False,
