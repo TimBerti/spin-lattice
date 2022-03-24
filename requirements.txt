@@ -1,5 +1,4 @@
 numpy
 dash
-dash-bootstrap-components
 plotly
 gunicorn

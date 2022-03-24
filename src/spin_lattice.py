@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Grid:
 
     def __init__(self, n=20, m=20, x_range=(-10, 10), y_range=(-10, 10)):
@@ -82,8 +83,8 @@ class SpinLatticeWithField:
         self.field_coefficient = field_coefficient
         self.spin_coefficient = spin_coefficient
         self.grid = grid if grid else Grid(**grid_args)
-        self.spin_lattice = SpinLattice(**spin_lattice_args)
-        self.field = Field(**field_args)
+        self.spin_lattice = SpinLattice(**spin_lattice_args, grid=grid)
+        self.field = Field(**field_args, grid=grid)
 
     def calculate_force(self):
         x_neighbors, y_neighbors = self.spin_lattice.calculate_sum_of_neighboring_spins()

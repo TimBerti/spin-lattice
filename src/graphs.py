@@ -4,8 +4,11 @@ from .spin_lattice import SpinLatticeWithField, Field
 
 
 def create_field_graph(field_type):
+
     field = Field(field_type)
+
     fig = ff.create_quiver(field.grid.x, field.grid.y, field.x, field.y, scale=.5, marker=dict(color='black'))
+
     fig.update_layout(
             plot_bgcolor= 'rgba(0, 0, 0, 0)',
             paper_bgcolor= 'rgba(0, 0, 0, 0)',
@@ -14,12 +17,12 @@ def create_field_graph(field_type):
             hovermode=False,
             margin=dict(l=0, r=0, t=0, b=0)
         )
+        
     return fig
 
 
 def create_frames(spin_lattice_with_field, increment=.1, n_frames=30, n_per_frame=10):
 
-    
     frames = []
 
     for _ in range(n_frames):
